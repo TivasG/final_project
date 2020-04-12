@@ -1,0 +1,88 @@
+---
+title: "ms_6"
+author: "Tivas Gupta"
+date: "4/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(janitor)
+library(tidyverse)
+library(readxl)
+```
+
+```{r, warning = FALSE, message = FALSE}
+
+#This is a code chunk for the other set of data, let me read it in first.
+
+
+Populist_Data <- read_excel("~/Harvard/Freshman Year/Government 1005/Final Project/final_project_milestone_5/Populist Data.xlsx")
+#View(Populist_Data)
+
+new_populist <- Populist_Data %>%
+  rename(year = `year begin`)
+
+new_populist <- new_populist %>%
+  select(country, `average score`, year)
+
+#view(new_populist)
+
+inequality <- read_csv("ms_6/Income Inequality Data by Country.csv")
+
+
+tidy_inequality <- inequality %>%
+  pivot_longer(cols = -Year, 
+               names_to = "Country Name", 
+               values_to = "Inequality Data") 
+
+location <- tidy_inequality %>%
+  mutate(`Country Name` = `Country Name` %>%
+                          substring(21)) %>%
+  mutate(`Country Name` = gsub( "_.*$", "_", `Country Name`)) %>%
+  mutate(`Country Name` = substr(`Country Name`, 
+                                 1, 
+                                 nchar(`Country Name`)-1)) %>%
+  mutate(`Country Name` = paste(toupper(substring(`Country Name`, 1,1)),
+                                (substring(`Country Name`, 2,nchar(`Country Name`))),
+                                 sep="")) %>%
+  rename(country = `Country Name`) %>%
+  rename(year = Year)
+
+inequality <- location %>%
+  filter(!is.na(`Inequality Data`))
+
+named_inequality <- inequality %>%
+  mutate(`Country name` = (substr(country, 1, nchar(`country`) - 40))) #%>%
+  #mutate(`Nation` = ifelse(`Country name` == "New", 
+                           #"New Zealand", 
+                           #(substr(`Country name`, 1, nchar(`Country name`) - 8)))) 
+#view(named_inequality)
+
+final_inequality <- named_inequality %>%
+  select(year, `Country name`, `Inequality Data`) %>%
+  rename(country2 = `Country name`) %>%
+  mutate(country = ifelse(country2 == "USA", "United States", 
+                          (ifelse(country2 == "Russian Federation", "Russia", country2)))) %>% 
+  select(-country2)
+
+joined_data = full_join(new_populist, final_inequality, by = c("country", "year"))
+
+View(new_populist)
+View(final_inequality)
+#View(joined_data)
+
+true_data <- joined_data %>%
+  filter(!is.na(`Inequality Data`)) %>%
+  filter(!is.na(`average score`))
+
+true_data <- true_data %>%
+  filter(`average score` != 0.00000000)
+
+
+#true_data
+plot2 <- ggplot(true_data, aes(x = `Inequality Data`, y = `average score`)) + geom_point() + #geom_abline()
+geom_smooth(method = "lm", se = FALSE)
+```
+
