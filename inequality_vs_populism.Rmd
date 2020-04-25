@@ -1,0 +1,118 @@
+---
+title: "inequality_vs_populism"
+author: "Tivas Gupta"
+date: "4/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+        
+        # We will use this R chunk to load and clean the data that I will use for the
+        # project. First I will load the inequality data.
+        
+        library(readr)
+        library(janitor)
+        library(tidyverse)
+        library(readxl)
+        library(gt)
+        library(haven)
+        library(infer)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(fivethirtyeight)
+library(skimr)
+#library(tidymodels)
+library(broom)
+library(skimr)
+library(gganimate)
+library(rpart.plot)
+library(patchwork)
+
+        inequality <- read_csv("Income Inequality Data by Country.csv") %>%
+            clean_names() 
+        
+        
+        #We need to tidy it so we can add populism data.
+        
+        tidy_inequality <- inequality %>%
+            pivot_longer(cols = -year, 
+                         names_to = "Country Name", 
+                         values_to = "Inequality Data") 
+        
+        #View(tidy_inequality)
+        
+        
+        #Now we can load the populist 
+        
+        populist <- read_csv("speech_populist.csv") %>%
+            clean_names()
+        
+        location <- tidy_inequality %>%
+            mutate(`Country Name` = `Country Name` %>%
+                       substring(21)) %>%
+            mutate(`Country Name` = gsub( "_.*$", "_", `Country Name`)) %>%
+            mutate(`Country Name` = substr(`Country Name`, 
+                                           1, 
+                                           nchar(`Country Name`)-1)) %>%
+            mutate(`Country Name` = paste(toupper(substring(`Country Name`, 1,1)),
+                                          (substring(`Country Name`, 2,nchar(`Country Name`))),
+                                          sep="")) %>%
+            rename(country = `Country Name`)
+        
+        new_populist = populist %>%
+            rename(year = yearbegin)
+        #location
+        #?sub
+        joined_data = full_join(new_populist, location, by = c("country", "year")) %>% 
+        filter(!is.na(`Inequality Data`))
+        #View(populist)
+        #View(joined_data)
+        
+        plot1 <- ggplot(joined_data, aes(x = `Inequality Data`, y = totalaverage)) + geom_point() + labs(title = "Inequality vs Populist Rhetoric in Speeches", 
+                                                                                                 subtitle =  "How increased inequality affects populism in political discourse") + ylab("Populism Score")
+        # Draw the histogram with the specified number of bins
+        
+        plot1
+        
+  
+        
+        
+  data_log <- joined_data %>%
+  mutate(log_inequality= log(`Inequality Data`), 
+         log_populism = log(totalaverage)) %>%
+    filter(log_populism > -4)
+  
+  plot2 <- ggplot(data_log, aes(x = log_inequality, y = log_populism))+
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) + 
+  labs(title = "Inequality vs Populist Rhetoric in Speeches", 
+                                                                                                 subtitle =  "Both Inequality and the Populism Variables are Logged") + ylab("Populism Score") + xlab("Inequality Score") + theme_classic()
+
+plot2
+
+model_3 = lm(data = data_log, log_populism ~log_inequality)
+
+model_3 %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+             decimals = 2) %>%
+  #Have to include decimals = 2 for the rest of the Pset to make the GT tables
+  #easier to read.
+  tab_header(title = 
+             "Effect of Number of Inequality on  Remittances" ,
+             subtitle = "Both Inequality and Remittances are logged") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
+```
+

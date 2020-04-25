@@ -102,23 +102,79 @@ joined_social_ineq <- left_join(spending,
 joined_social_ineq
 
 ggplot(joined_social_ineq, aes(x = Social_GDP,
-                               y = `Inequality Data`)) + geom_point() #+ #geom_smooth(se = FALSE, method = "linear")
+                               y = `Inequality Data`)) + geom_point() + geom_smooth(method = lm, se = FALSE) + labs(title = "Inequality vs Populist Levels of Leaders", 
+                                                                                                 subtitle =  "Social Spending Data is from the OECD") + ylab("Inequality Score") + xlab("Social Spending as a Percentage of GDP") + theme_classic()
+#+ #geom_smooth(se = FALSE, method = "linear")
 #lm()
 model_1 <- lm(data = joined_social_ineq, 
                `Inequality Data` ~  Social_GDP)
 
-model_1
+#model_1
 
-model_1 %>%
-  tidy(conf.int = TRUE)
+#model_1 %>%
+#  tidy(conf.int = TRUE)
 
-joined_social_ineq %>%
-  filter(Social_GDP == 0)
+#joined_social_ineq %>%
+#  filter(Social_GDP == 0)
 
-joined_social_ineq %>%
-  arrange(desc(Social_GDP))
+#joined_social_ineq %>%
+#  arrange(desc(Social_GDP))
 
 #This is a very nice Graph that I will make prettier and include in my final
 #project.
-  
+#ggsave("social_spending.png")
 ```
+
+```{r}
+
+#Now we want to undergo a similar process, but this time with happiness by
+#countries instead of social spending.
+
+happiness_metrics <- read_excel("Happiness Dataset.xls") %>%
+  select(`Country name`, Year, )
+
+#So these are just the metrics they used to determine the happiness score; could
+#be helpful, but I am probably just going to use the happiness score. That is
+#just from 2019 though which is a little unfortanate.
+#View(Happiness_Dataset)
+
+inequality_2019 <- final_inequality %>%
+  filter(year == 2019)
+
+#There is no 2019 data, so we will just use data from when it is most recently
+#availible, which is 2015. We will also use the happiness scores from that year.
+
+#final_inequality %>% arrange(desc(year))
+
+inequality_2015 <- final_inequality %>%
+  filter(year == 2015) %>%
+  mutate(Country = country) %>%
+  select(-country)
+
+happiness_2015 <- read_csv("2015.csv")
+
+#View(inequality_2015)
+
+inequality_happiness_2015 <- left_join(happiness_2015,
+                                       inequality_2015, 
+                                       by = "Country")
+
+#inequality_happiness_2015 
+inequality_happiness_2015$ID <- seq.int(nrow(inequality_happiness_2015))
+ggplot(inequality_happiness_2015 %>% mutate(time=158), 
+       aes(x = `Inequality Data`, 
+           y = `Happiness Score`, 
+           color = Region)) + geom_point() #+
+  #enter_fade()
+
+#Hmmm looks pretty good, we will construct a model now.
+
+model_2 <- lm(`Happiness Score` ~ `Inequality Data`, 
+              data = inequality_happiness_2015)
+
+#model_2 %>%
+  #tidy(conf.int = TRUE)
+
+ggsave("happiness.png")
+```
+

@@ -1,0 +1,12 @@
+name: App-1
+title: App-1
+username:
+account: tivasg
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2183377
+bundleId: 3062722
+url: https://tivasg.shinyapps.io/App-1/
+when: 1587796326.86223
+asMultiple: FALSE
+asStatic: FALSE

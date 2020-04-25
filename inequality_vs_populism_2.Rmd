@@ -18,7 +18,7 @@ library(readxl)
 #This is a code chunk for the other set of data, let me read it in first.
 
 
-Populist_Data <- read_excel("~/Harvard/Freshman Year/Government 1005/Final Project/final_project_milestone_5/Populist Data.xlsx")
+Populist_Data <- read_excel("Populist Data.xlsx")
 #View(Populist_Data)
 
 new_populist <- Populist_Data %>%
@@ -29,7 +29,7 @@ new_populist <- new_populist %>%
 
 #view(new_populist)
 
-inequality <- read_csv("ms_6/Income Inequality Data by Country.csv")
+inequality <- read_csv("Income Inequality Data by Country.csv")
 
 
 tidy_inequality <- inequality %>%
@@ -69,8 +69,8 @@ final_inequality <- named_inequality %>%
 
 joined_data = full_join(new_populist, final_inequality, by = c("country", "year"))
 
-View(new_populist)
-View(final_inequality)
+#View(new_populist)
+#View(final_inequality)
 #View(joined_data)
 
 true_data <- joined_data %>%
@@ -82,6 +82,20 @@ true_data <- true_data %>%
 
 
 #true_data
-plot2 <- ggplot(true_data, aes(x = `Inequality Data`, y = `average score`)) + geom_point() + #geom_abline()
-geom_smooth(method = "lm", se = FALSE)
+plot_notlogged <- ggplot(true_data, aes(x = `Inequality Data`, y = `average score`)) + geom_point() 
+
+plot_notlogged
+
+
+data_log <- true_data %>%
+  mutate(log_inequality= log(`Inequality Data`), 
+         log_populism = log(`average score`))
+
+plot3 <- ggplot(data_log, aes(x = log_inequality, y = log_populism))+
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) + 
+  labs(title = "Inequality vs Populist Levels of Leaders", 
+                                                                                                 subtitle =  "Both Inequality and the Populism Variables are Logged") + ylab("Leader Populism Score") + xlab("Inequality Score") + theme_classic()
+
+plot3
 ```
