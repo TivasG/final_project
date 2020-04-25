@@ -1,0 +1,124 @@
+---
+title: "inequality vs social spending"
+author: "Tivas Gupta"
+date: "4/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(readr)
+library(janitor)
+library(tidyverse)
+library(readxl)
+```
+
+```{r, warning = FALSE, message = FALSE}
+
+#This is a code chunk for the other set of data, let me read it in first.
+
+
+#view(new_populist)
+
+inequality <- read_csv("Income Inequality Data by Country.csv")
+
+
+tidy_inequality <- inequality %>%
+  pivot_longer(cols = -Year, 
+               names_to = "Country Name", 
+               values_to = "Inequality Data") 
+
+location <- tidy_inequality %>%
+  mutate(`Country Name` = `Country Name` %>%
+                          substring(21)) %>%
+  mutate(`Country Name` = gsub( "_.*$", "_", `Country Name`)) %>%
+  mutate(`Country Name` = substr(`Country Name`, 
+                                 1, 
+                                 nchar(`Country Name`)-1)) %>%
+  mutate(`Country Name` = paste(toupper(substring(`Country Name`, 1,1)),
+                                (substring(`Country Name`, 2,nchar(`Country Name`))),
+                                 sep="")) %>%
+  rename(country = `Country Name`) %>%
+  rename(year = Year)
+
+inequality <- location %>%
+  filter(!is.na(`Inequality Data`))
+
+named_inequality <- inequality %>%
+  mutate(`Country name` = (substr(country, 1, nchar(`country`) - 40))) #%>%
+  #mutate(`Nation` = ifelse(`Country name` == "New", 
+                           #"New Zealand", 
+                           #(substr(`Country name`, 1, nchar(`Country name`) - 8)))) 
+#view(named_inequality)
+
+final_inequality <- named_inequality %>%
+  select(year, `Country name`, `Inequality Data`) %>%
+  rename(country2 = `Country name`) %>%
+  mutate(country = ifelse(country2 == "USA", "United States", 
+                          (ifelse(country2 == "Russian Federation", "Russia", country2)))) %>% 
+  select(-country2) 
+
+#The Social spending data uses three letter country abbrevations, or codes, so I had to make a dataset with all of those codes and countries. Otherwise it would have been way to difficult to join the social spending data with the inequality data.
+
+codes <- read_excel("codes.xlsx")
+
+#final_inequality
+
+#I have both the Social Spending and Social Spending as a percentage of GDP for
+#this data. Not sure which one will work better, but I am guessing by GDP
+#because then it will ideally scale for all countries.
+
+#I started with SOcial Spending by accident but hopefully I can just switch to
+#by percentage of GDP easily without chanigng other code.
+
+spending <- read_csv("Social Spending OECD Percentage.csv")
+
+#View(spending)
+
+#View(codes)
+
+spending <- spending %>%
+  filter(SUBJECT == "PUB")
+
+spending <- left_join(spending, codes, by = "LOCATION") %>% 
+  select(Country, TIME, Value) %>%
+  mutate(Social_GDP = Value) %>%
+  select(-Value)
+
+#spending 
+
+#final_inequality
+
+final_inequality2 <- final_inequality %>%
+  mutate(TIME = year,
+         Country = country) %>%
+  select(-year, -country)
+
+#final_inequality2
+
+joined_social_ineq <- left_join(spending, 
+                                final_inequality2,
+                                by = c("TIME", "Country"))
+joined_social_ineq
+
+ggplot(joined_social_ineq, aes(x = Social_GDP,
+                               y = `Inequality Data`)) + geom_point() #+ #geom_smooth(se = FALSE, method = "linear")
+#lm()
+model_1 <- lm(data = joined_social_ineq, 
+               `Inequality Data` ~  Social_GDP)
+
+model_1
+
+model_1 %>%
+  tidy(conf.int = TRUE)
+
+joined_social_ineq %>%
+  filter(Social_GDP == 0)
+
+joined_social_ineq %>%
+  arrange(desc(Social_GDP))
+
+#This is a very nice Graph that I will make prettier and include in my final
+#project.
+  
+```
