@@ -13,9 +13,21 @@ library(shiny)
 # Define UI for application that draws a histogram
 ui <- navbarPage(
     "Inequality in the World Today",
-    tabPanel("Model",
+    tabPanel("Populism",
              fluidPage(
                  titlePanel("Inequality vs. Populism Data"),
+                 sidebarLayout(
+                     sidebarPanel(
+                         selectInput(
+                            "plot_type",
+                            "Populism vs Inequality",
+                            c("Option A" = "a", "Option B" = "b")
+                     )),
+                     mainPanel(plotOutput("line_plot")))
+             )),
+    tabPanel("Social Spending",
+             fluidPage(
+                 titlePanel("Inequality vs. Social Spending"),
                  sidebarLayout(
                      sidebarPanel(
                          selectInput(
@@ -24,17 +36,13 @@ ui <- navbarPage(
                              c("Option A" = "a", "Option B" = "b")
                          )),
                      mainPanel(plotOutput("line_plot")))
-             )),
-    tabPanel("Discussion",
-             titlePanel("Discussion Title"),
-             p("Tour of the modeling choices you made and 
-              an explanation of why you made them")),
+             )),    
     tabPanel("About", 
-             titlePanel("About"),
-             h3("Project Background and Motivations"),
-             p("Hello, this is where I talk about my project."),
-             h3("About Me"),
-             p("My name is ______ and I study ______. 
+            titlePanel("About"),
+                             h3("Project Background and Motivations"),
+                             p("Hello, this is where I talk about my project."),
+                             h3("About Me"),
+                             p("My name is ______ and I study ______. 
              You can reach me at ______@college.harvard.edu.")))
 
 # Define server logic required to draw a histogram
@@ -92,7 +100,7 @@ server <- function(input, output) {
         #View(joined_data)
         
         plot1 <- ggplot(joined_data, aes(x = `Inequality Data`, y = totalaverage)) + geom_smooth() + labs(title = "Inequality vs Populist Rhetoric in Speeches", 
-                                                                                                 subtitle =  "How increased inequality affects populism in political discourse") + ylab("Populism Score")
+                                                                                                          subtitle =  "How increased inequality affects populism in political discourse") + ylab("Populism Score")
         # Draw the histogram with the specified number of bins
         
         #hist(x, col = 'darkgray', border = 'white')

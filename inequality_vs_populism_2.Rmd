@@ -11,6 +11,20 @@ library(readr)
 library(janitor)
 library(tidyverse)
 library(readxl)
+library(gt)
+library(haven)
+library(infer)
+library(ggthemes)
+library(scales)
+library(knitr)
+library(fivethirtyeight)
+library(skimr)
+#library(tidymodels)
+library(broom)
+library(skimr)
+library(gganimate)
+library(rpart.plot)
+library(patchwork)
 ```
 
 ```{r, warning = FALSE, message = FALSE}
@@ -80,6 +94,22 @@ true_data <- joined_data %>%
 true_data <- true_data %>%
   filter(`average score` != 0.00000000)
 
+model_1_populism <- lm(`average score` ~ `Inequality Data`, data = true_data)
+
+model_1_populism %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+                            decimals = 2) %>%
+  #Have to include decimals = 2 for the rest of the Pset to make the GT tables
+  #easier to read.
+  tab_header(title = "Effect of Inequality on Populist Leaders") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
 
 #true_data
 plot_notlogged <- ggplot(true_data, aes(x = `Inequality Data`, y = `average score`)) + geom_point() 
@@ -90,6 +120,25 @@ plot_notlogged
 data_log <- true_data %>%
   mutate(log_inequality= log(`Inequality Data`), 
          log_populism = log(`average score`))
+
+model_1_populism_log = lm(log_populism ~ log_inequality, data = data_log)
+
+model_1_populism_log %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+             decimals = 2) %>%
+  #Have to include decimals = 2 for the rest of the Pset to make the GT tables
+  #easier to read.
+  tab_header(title = 
+             "Effect of Inequality on Populist Leaders" ,
+             subtitle = "Both Inequality and Populsim are logged") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
 
 plot3 <- ggplot(data_log, aes(x = log_inequality, y = log_populism))+
   geom_point() +

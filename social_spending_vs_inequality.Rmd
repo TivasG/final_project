@@ -21,6 +21,7 @@ library(readxl)
 #view(new_populist)
 
 inequality <- read_csv("Income Inequality Data by Country.csv")
+#inequality
 
 
 tidy_inequality <- inequality %>%
@@ -106,13 +107,28 @@ ggplot(joined_social_ineq, aes(x = Social_GDP,
                                                                                                  subtitle =  "Social Spending Data is from the OECD") + ylab("Inequality Score") + xlab("Social Spending as a Percentage of GDP") + theme_classic()
 #+ #geom_smooth(se = FALSE, method = "linear")
 #lm()
-model_1 <- lm(data = joined_social_ineq, 
-               `Inequality Data` ~  Social_GDP)
+model_1_socialgdp <- lm(data = joined_social_ineq, 
+                        `Inequality Data` ~  Social_GDP)
 
 #model_1
 
-#model_1 %>%
-#  tidy(conf.int = TRUE)
+#joined_social_ineq
+model_1_socialgdp %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+             decimals = 6) %>%
+  #Have to include decimals = 2 for the rest of the Pset to make the GT tables
+  #easier to read.
+  tab_header(title = 
+             "Relationship between Inequality and Social Spending" ,
+             subtitle = "Social Spending is a Percentage of a Nation's GDP") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
 
 #joined_social_ineq %>%
 #  filter(Social_GDP == 0)
@@ -169,12 +185,48 @@ ggplot(inequality_happiness_2015 %>% mutate(time=158),
 
 #Hmmm looks pretty good, we will construct a model now.
 
-model_2 <- lm(`Happiness Score` ~ `Inequality Data`, 
+model_1_happiness <- lm(`Happiness Score` ~ `Inequality Data`, 
               data = inequality_happiness_2015)
 
-#model_2 %>%
-  #tidy(conf.int = TRUE)
+model_1_happiness %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+             decimals = 6) %>%
+  tab_header(title = 
+             "Relationship between Inequality and Happiness" ,
+             subtitle = "Happiness Data is from the World Happiness Report") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
 
-ggsave("happiness.png")
+#ggsave("happiness.png")
+
+inequality_happiness_2015
+
+model_2_happiness <- lm(`Inequality Data` ~ Family + 
+                                            Freedom + 
+                                            `Health (Life Expectancy)` + 
+                                            `Trust (Government Corruption)` +
+                                            Generosity, 
+                        data = inequality_happiness_2015) 
+
+model_2_happiness %>%
+  tidy(conf.int = TRUE) %>%
+  select(term, estimate, conf.low, conf.high) %>%
+  gt() %>%
+  fmt_number(columns = vars(estimate, conf.low, conf.high), 
+             decimals = 6) %>%
+  tab_header(title = 
+             "Relationship between Inequality and Quality of Life Metrics" ,
+             subtitle = "Data is from the World Happiness Report") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
 ```
 

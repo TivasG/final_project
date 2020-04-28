@@ -15,13 +15,13 @@ knitr::opts_chunk$set(echo = TRUE)
         # We will use this R chunk to load and clean the data that I will use for the
         # project. First I will load the inequality data.
         
-        library(readr)
-        library(janitor)
-        library(tidyverse)
-        library(readxl)
-        library(gt)
-        library(haven)
-        library(infer)
+library(readr)
+library(janitor)
+library(tidyverse)
+library(readxl)
+library(gt)
+library(haven)
+library(infer)
 library(ggthemes)
 library(scales)
 library(knitr)
@@ -74,6 +74,25 @@ library(patchwork)
         #View(populist)
         #View(joined_data)
         
+        model_2_populism <- lm(`totalaverage` ~ `Inequality Data`, 
+                               data = joined_data)
+        
+        model_2_populism %>%
+          tidy(conf.int = TRUE) %>%
+          select(term, estimate, conf.low, conf.high) %>%
+          gt() %>%
+          fmt_number(columns = vars(estimate, conf.low, conf.high), 
+                    decimals = 2) %>%
+  #Have to include decimals = 2 for the rest of the Pset to make the GT tables
+  #easier to read.
+  tab_header(title = 
+             "Effect of Inequality on Populist Speech") %>%
+  cols_label(
+    term = "Variable",
+    estimate = "Estimate",
+    conf.low = "Lower Bound",
+    conf.high = "Upper Bound")
+        
         plot1 <- ggplot(joined_data, aes(x = `Inequality Data`, y = totalaverage)) + geom_point() + labs(title = "Inequality vs Populist Rhetoric in Speeches", 
                                                                                                  subtitle =  "How increased inequality affects populism in political discourse") + ylab("Populism Score")
         # Draw the histogram with the specified number of bins
@@ -96,9 +115,9 @@ library(patchwork)
 
 plot2
 
-model_3 = lm(data = data_log, log_populism ~log_inequality)
+model_2_populism_log = lm(data = data_log, log_populism ~log_inequality)
 
-model_3 %>%
+model_2_populism_log %>%
   tidy(conf.int = TRUE) %>%
   select(term, estimate, conf.low, conf.high) %>%
   gt() %>%
@@ -107,8 +126,8 @@ model_3 %>%
   #Have to include decimals = 2 for the rest of the Pset to make the GT tables
   #easier to read.
   tab_header(title = 
-             "Effect of Number of Inequality on  Remittances" ,
-             subtitle = "Both Inequality and Remittances are logged") %>%
+             "Effect of Inequality on Populist Speech" ,
+             subtitle = "Both Inequality and Populsim are logged") %>%
   cols_label(
     term = "Variable",
     estimate = "Estimate",
